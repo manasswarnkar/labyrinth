@@ -9,7 +9,7 @@ Currently done:
 - generating walls from a tilemap text file
 
 working on:
--adding collision on walls
--adding a menu
--implementing maze generation algorithm
--win screen
+- adding collision on walls
+- adding a menu
+- implementing maze generation algorithm
+- win screen
