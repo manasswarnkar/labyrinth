@@ -5,6 +5,8 @@ use bevy::{
     prelude::*
 };
 
+use bevy_rapier3d::prelude::*;
+
 pub struct WorldPlugin;
 
 impl Plugin for WorldPlugin {
@@ -42,36 +44,13 @@ fn spawn_floor(
             transform: Transform::from_xyz(0.0, 0.0, 0.0),
             ..Default::default()
         },
-    Name::new("Floor"),
+        Name::new("Floor"),
+        RigidBody::Fixed,
+        Collider::cuboid(50.0, 0.0, 50.0)
     );
 
     commands.spawn(floor);
 }
-
-// fn spawn_objects(
-//     mut commands: Commands,
-//     mut meshes: ResMut<Assets<Mesh>>,
-//     mut materials: ResMut<Assets<StandardMaterial>>,
-// ) {
-//     let mut create_cube = |size: f32, color: Srgba, xyz: (f32, f32, f32), name: String| -> (PbrBundle, Name) {
-//         (
-//             PbrBundle {
-//                 mesh : meshes.add(Mesh::from(Cuboid::new(size,size,size)
-//                 )),
-//                 material : materials.add(StandardMaterial{
-//                     base_color: color.into(),
-//                     ..default()
-//                 }),
-//                 transform: Transform::from_xyz(xyz.0, xyz.1, xyz.2),
-//                 ..default()
-//             },
-//             Name::new(name),
-//         )
-//     };
-//     commands.spawn(create_cube(4.0, BLUE, (-5.0, 2.0, 5.0), "BLUE CUBE".to_string()));
-//     commands.spawn(create_cube(2.0, RED, (6.0, 1.0, -6.0), "RED CUBE".to_string()));
-// }
-
 
 fn spawn_walls (
     mut commands : Commands,
@@ -89,14 +68,16 @@ fn spawn_walls (
                 // println!("Tile[{}][{}] : {}", x, y, tile);
                 match tile {
                     '#' => {
-                        commands.spawn(
+                        commands.spawn((
                             PbrBundle {
                                 mesh : meshes.add(Mesh::from(Cuboid::new(1.0,2.0,1.0))),
                                 material: wall_material.clone(),
                                 transform: Transform::from_translation(pos),
                                 ..default()
-                            }
-                        );
+                            },
+                            RigidBody::Fixed,
+                            Collider::cuboid(0.2,1.0,0.2)
+                        ));
                     },
                     _=>()
                 };

@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use bevy_third_person_camera::*;
-
+use bevy_rapier3d::prelude::*;
 pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
@@ -22,10 +22,10 @@ struct Speed(f32);
 fn player_movement(
     keys: Res<ButtonInput<KeyCode>>,
     time: Res<Time>,
-    mut player_q : Query<(&mut Transform, &Speed), With<Player>>,
+    mut player_q : Query<(&mut Transform, &Speed, &mut KinematicCharacterController), With<Player>>,
     cam_q : Query<&Transform , (With<Camera3d>, Without<Player>)>,
 ) {
-    for (mut player_transform, player_speed) in player_q.iter_mut() {
+    if let Ok((mut player_transform, player_speed, mut controller)) = player_q.get_single_mut() {
         let cam = match cam_q.get_single() {
             Ok(c) => c,
             Err(e) => Err(format!("Error retrieving camera: {}", e)).unwrap(),
@@ -51,7 +51,8 @@ fn player_movement(
 
         direction.y = 0.0;
         let movement = direction.normalize_or_zero() * player_speed.0 * time.delta_seconds();
-        player_transform.translation += movement;
+        
+        controller.translation = Some(movement);
 
 
         //rotate player to face direction of movement
@@ -79,7 +80,7 @@ fn spawn_player(
             shadows_enabled:true,
             ..Default::default()
             },
-            transform: Transform::from_xyz(0.0, 0.0, -0.5),
+            transform: Transform::from_xyz(0.0,1.0, -0.5),
             ..Default::default()
         }, 
         Name::new("Flashlight"));
@@ -94,9 +95,15 @@ fn spawn_player(
     Player,
     ThirdPersonCameraTarget,
     Name::new("Player"),
+    Collider::cuboid(0.5, 1.0, 0.5),
+    RigidBody::KinematicPositionBased
 );
 
-    commands.spawn(player).with_children(|parent| {
+    commands.spawn(player)
+    .insert(KinematicCharacterController{
+        ..KinematicCharacterController::default()
+    })
+    .with_children(|parent| {
         parent.spawn(flashlight);
     });
 
