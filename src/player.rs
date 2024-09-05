@@ -1,13 +1,15 @@
 use bevy::prelude::*;
 use bevy_third_person_camera::*;
 use bevy_rapier3d::prelude::*;
+use crate::menu::GameState;
+
 pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app
-            .add_systems(Startup, spawn_player)
-            .add_systems(Update, player_movement);
+            .add_systems(OnEnter(GameState::InGame), spawn_player)
+            .add_systems(Update, (player_movement).run_if(in_state(GameState::InGame)));
 
     }
 }
@@ -88,7 +90,7 @@ fn spawn_player(
     let player = (
     SceneBundle {
         scene : assets.load("Player.gltf#Scene0"),
-        transform : Transform::from_xyz(0.0, 0.5, 0.0),
+        transform : Transform::from_xyz(0.0, 1.0, 0.0),
         ..default()
     },
     Speed(5.0),

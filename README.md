@@ -8,8 +8,8 @@ Currently done:
 - rendering 3D objects, lights, camera, player
 - generating walls from a tilemap text file
 - adding collision on walls
+- adding a menu
 
 working on:
-- adding a menu
 - implementing maze generation algorithm
 - win screen

@@ -6,16 +6,24 @@ use bevy_rapier3d::prelude::*;
 mod player;
 mod camera;
 mod world;
-// mod tilemap;
+mod menu;
 
+use menu::MenuPlugin;
 use player::PlayerPlugin;
 use camera::CameraPlugin;
 use world::WorldPlugin;
-// use tilemap::TileMapPlugin;
 
 fn main() {
     App::new()
-        .add_plugins((DefaultPlugins, PlayerPlugin, CameraPlugin, WorldPlugin, ThirdPersonCameraPlugin, WorldInspectorPlugin::new(), RapierPhysicsPlugin::<NoUserData>::default()))
+        .add_plugins((
+            DefaultPlugins, 
+            PlayerPlugin, 
+            CameraPlugin, 
+            WorldPlugin, 
+            MenuPlugin, 
+            ThirdPersonCameraPlugin, 
+            WorldInspectorPlugin::new(), 
+            RapierPhysicsPlugin::<NoUserData>::default()
+        ))
         .run();
-
 }

@@ -1,17 +1,13 @@
 use std::{fs::File, io::{self, BufRead}, path::Path};
-
-use bevy::{
-    // color::palettes::css::{BLUE, RED}, 
-    prelude::*
-};
-
+use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
+use crate::menu::GameState;
 
 pub struct WorldPlugin;
 
 impl Plugin for WorldPlugin {
     fn build(&self,app: &mut App) {
-        app.add_systems(Startup, (spawn_floor, spawn_light, spawn_walls));
+        app.add_systems(OnEnter(GameState::InGame), (spawn_floor, spawn_light, spawn_walls));
     }
 }
 
@@ -39,9 +35,9 @@ fn spawn_floor(
 ) {
     let floor = (
         PbrBundle {
-            mesh: meshes.add(Plane3d::default().mesh().size(50.0, 50.0)),
+            mesh: meshes.add(Plane3d::default().mesh().size(110.0, 110.0)),
             material: materials.add(Color::srgb(0.0, 1.0, 0.0).darker(0.5)),
-            transform: Transform::from_xyz(0.0, 0.0, 0.0),
+            transform: Transform::from_xyz(45.0, 0.0, 45.0),
             ..Default::default()
         },
         Name::new("Floor"),
