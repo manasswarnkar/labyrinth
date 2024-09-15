@@ -2,6 +2,7 @@ use bevy::prelude::*;
 use bevy_third_person_camera::*;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use bevy_rapier3d::prelude::*;
+use menu::UiCameraExists;
 
 mod player;
 mod camera;
@@ -25,5 +26,6 @@ fn main() {
             WorldInspectorPlugin::new(), 
             RapierPhysicsPlugin::<NoUserData>::default()
         ))
+        .insert_resource(UiCameraExists(false))
         .run();
 }

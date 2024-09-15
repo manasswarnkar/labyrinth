@@ -16,7 +16,7 @@ fn spawn_light(mut commands: Commands) {
         PointLightBundle {
             point_light : PointLight {
                 shadows_enabled: true,
-                intensity: 0.0,
+                intensity: 100.0,
                 ..Default::default()
             },
             transform : Transform::from_xyz(0.0, 5.0, 0.0),
@@ -32,11 +32,16 @@ fn spawn_floor(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
+    server : Res<AssetServer>
 ) {
+    let floor_material_handle: Handle<Image> = server.load("grass.jpg");
+
+    
+
     let floor = (
         PbrBundle {
             mesh: meshes.add(Plane3d::default().mesh().size(110.0, 110.0)),
-            material: materials.add(Color::srgb(0.0, 1.0, 0.0).darker(0.5)),
+            material: materials.add(floor_material_handle),
             transform: Transform::from_xyz(45.0, 0.0, 45.0),
             ..Default::default()
         },
@@ -51,28 +56,35 @@ fn spawn_floor(
 fn spawn_walls (
     mut commands : Commands,
     mut meshes : ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>> 
+    mut materials: ResMut<Assets<StandardMaterial>>,
+    server : Res<AssetServer> 
 ) {
-   
-    let wall_material = materials.add(Color::srgb(0.8, 0.2, 0.2));
+    let wall_handle: Handle<Image> = server.load("wall.jpg");
+    let wall_material = materials.add(
+        StandardMaterial {
+            base_color : Color::WHITE,
+            base_color_texture : Some(wall_handle),
+            ..Default::default()
+        }
+    );
     println!("wall?");
 
     for (_c, row) in read_lines("assets/map.txt").into_iter().enumerate() {
         for (y, line) in row.enumerate().into_iter() {
             for (x, tile) in line.unwrap().chars().enumerate().into_iter(){
-                let pos = Vec3::new(x as f32, 1.0, y as f32);
+                let pos = Vec3::new(x as f32, 1.5, y as f32);
                 // println!("Tile[{}][{}] : {}", x, y, tile);
                 match tile {
                     '#' => {
                         commands.spawn((
                             PbrBundle {
-                                mesh : meshes.add(Mesh::from(Cuboid::new(1.0,2.0,1.0))),
+                                mesh : meshes.add(Mesh::from(Cuboid::new(1.0,3.0,1.0))),
                                 material: wall_material.clone(),
                                 transform: Transform::from_translation(pos),
                                 ..default()
                             },
                             RigidBody::Fixed,
-                            Collider::cuboid(0.2,1.0,0.2)
+                            Collider::cuboid(0.25,1.0,0.25)
                         ));
                     },
                     _=>()
