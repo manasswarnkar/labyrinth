@@ -90,7 +90,7 @@ fn spawn_player(
     let player = (
     SceneBundle {
         scene : assets.load("Player.gltf#Scene0"),
-        transform : Transform::from_xyz(0.0, 0.5, 0.0),
+        transform : Transform::from_xyz(0.5, 0.5, 0.5),
         ..default()
     },
     Speed(5.0),

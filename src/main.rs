@@ -17,7 +17,10 @@ use world::WorldPlugin;
 fn main() {
     App::new()
         .add_plugins((
-            DefaultPlugins, 
+            DefaultPlugins.set(AssetPlugin {
+                watch_for_changes_override: Some(true),
+                ..Default::default()
+            }), 
             PlayerPlugin, 
             CameraPlugin, 
             WorldPlugin, 
