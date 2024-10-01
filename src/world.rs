@@ -40,7 +40,7 @@ fn spawn_floor(
 
     let n = match lines.next() {
         Some(Ok(line)) => line.chars().count(),
-        Some(Err(e)) => return,
+        Some(Err(_e)) => return,
         None => 0,
     };
     
@@ -83,6 +83,9 @@ let mat: [f32; 4]  =  [1.0, 0.0, 0.0, 2.0];
         }
     );
     // println!("wall?");
+
+    let blue_material = materials.add(Color::srgb(0.0, 0.0, 1.0));
+    let green_material = materials.add(Color::srgb(0.0, 1.0, 0.0));
 
     let mesh1 = Mesh::new(bevy::render::mesh::PrimitiveTopology::TriangleList, RenderAssetUsages::MAIN_WORLD | RenderAssetUsages::RENDER_WORLD)
                 .with_inserted_attribute(Mesh::ATTRIBUTE_POSITION, 
@@ -195,9 +198,33 @@ let mat: [f32; 4]  =  [1.0, 0.0, 0.0, 2.0];
                             },
                             RigidBody::Fixed,
                             Collider::cuboid(0.25,1.0,0.25)
-                        ));
+                        ))
                     },
-                    _=>()
+                    'S' => {
+                        commands.spawn(
+                            (
+                            PbrBundle {
+                                mesh : meshes.add(Cuboid::new(1.0, 0.1, 1.0)),
+                                transform: Transform::from_translation(Vec3::new(x as f32, 0.0, y as f32)),
+                                material : blue_material.clone(),
+                                ..default()
+                            },
+                            Name::new("Starting Point"),
+                        ))
+                    },
+                    'E' => {
+                        commands.spawn(
+                            (
+                            PbrBundle {
+                                mesh : meshes.add(Cuboid::new(1.0, 0.1, 1.0)),
+                                transform: Transform::from_translation(Vec3::new(x as f32, 0.0, y as f32)),
+                                material : green_material.clone(),
+                                ..default()
+                            },
+                            Name::new("Ending Point"),
+                        ))
+                    },
+                    _ => commands.spawn(PbrBundle::default()),
                 };
             }
         }

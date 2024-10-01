@@ -8,12 +8,13 @@ mod player;
 mod camera;
 mod world;
 mod menu;
+mod algo;
 
 use menu::MenuPlugin;
 use player::PlayerPlugin;
 use camera::CameraPlugin;
 use world::WorldPlugin;
-
+use algo::Prim;
 fn main() {
     App::new()
         .add_plugins((
@@ -31,4 +32,11 @@ fn main() {
         ))
         .insert_resource(UiCameraExists(false))
         .run();
+
+    
+    // let maz = Prim::new(50, 50);
+
+    // for row in maz {
+    //     println!("{}", row.iter().collect::<String>());
+    // }
 }

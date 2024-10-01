@@ -9,7 +9,9 @@ Currently done:
 - generating walls from a tilemap text file
 - adding collision on walls
 - adding a menu
+- added textures to floors and walls
+- added starting and ending markers
 
 working on:
-- implementing maze generation algorithm
+- implementing maze generation algorithms
 - win screen
