@@ -1,4 +1,7 @@
+use std::fs::File;
 use bevy::prelude::*;
+use std::io::{Write, Result};
+use crate::algo;
 
 // States
 #[derive(States, Debug, Clone, Eq, PartialEq, Hash, Default)]
@@ -155,7 +158,7 @@ fn setup_gen_menu(mut commands: Commands, asset_server: Res<AssetServer>) {
             ));
 
             // Generate Option 1
-            spawn_button(parent, "Option 1", MenuButton::Option1, &asset_server);
+            spawn_button(parent, "Prim's Algo", MenuButton::Option1, &asset_server);
 
             // Generate Option 2
             spawn_button(parent, "Option 2", MenuButton::Option2, &asset_server);
@@ -242,9 +245,17 @@ fn generate_button_system(
         match *interaction {
             Interaction::Pressed => {
                 match button {
-                    MenuButton::Option1 | MenuButton::Option2 | MenuButton::Option3 => {
+                    MenuButton::Option1 => {
                         println!("Generate option selected: {:?}", button);
                         // Here you can add logic to handle the selected generation option
+                        let mat = algo::Prim::new(20, 20);
+                        
+                        let res = writefunc(mat, "assets/map.txt");
+                        match res {
+                            Ok(()) => {},
+                            Err(e) => {println!("{}", e)},
+                        }
+                        
                         next_state.set(GameState::MainMenu);
                     }
                     _ => {}
@@ -267,4 +278,20 @@ fn cleanup_menu(
     for entity in menu_query.iter() {
         commands.entity(entity).despawn_recursive();
     }
+}
+
+
+fn writefunc(vector: Vec<Vec<char>>, filename: &str) -> Result<()> {
+    let mut file = File::create(filename)?;
+    
+    for row in vector {
+        let row_str: Vec<String> = row.iter()
+            .map(|&val| val.to_string())
+            .collect();
+        
+        let line = row_str.join("") + "\n";
+        file.write_all(line.as_bytes())?;
+    }
+    
+    Ok(())
 }

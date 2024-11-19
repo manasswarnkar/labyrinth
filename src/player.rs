@@ -1,3 +1,4 @@
+use std::{fs::File, io::{BufRead, BufReader, Error}};
 use bevy::prelude::*;
 use bevy_third_person_camera::*;
 use bevy_rapier3d::prelude::*;
@@ -87,10 +88,12 @@ fn spawn_player(
         }, 
         Name::new("Flashlight"));
 
+    let start_pos = get_start_point().unwrap();
+
     let player = (
     SceneBundle {
         scene : assets.load("Player.gltf#Scene0"),
-        transform : Transform::from_xyz(0.5, 0.5, 0.5),
+        transform : Transform::from_xyz(start_pos[1] as f32 , 0.5, start_pos[0] as f32),
         ..default()
     },
     Speed(5.0),
@@ -109,4 +112,25 @@ fn spawn_player(
         parent.spawn(flashlight);
     });
 
+}
+
+
+
+fn get_start_point() -> Result<[usize; 2], Error> {
+    let mut vec : [usize; 2] = [0, 0];
+    let file = File::open("assets/map.txt")?;
+    let reader = BufReader::new(file);
+
+    for line in reader.lines().enumerate() {
+        let r = line.0;
+        let line = line.1?;
+        for ch in line.chars().enumerate() {
+            if ch.1 == 'S' {
+                vec = [r ,ch.0];
+                break;
+            }
+        }
+    }
+    
+    Ok(vec)
 }

@@ -14,7 +14,7 @@ use menu::MenuPlugin;
 use player::PlayerPlugin;
 use camera::CameraPlugin;
 use world::WorldPlugin;
-use algo::Prim;
+// use algo::Prim;
 fn main() {
     App::new()
         .add_plugins((

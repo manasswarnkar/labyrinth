@@ -1,4 +1,4 @@
-use rand::Rng;
+use rand::{seq::SliceRandom, Rng};
 
 #[derive(Debug, Default, Clone, Copy)]
 pub struct Prim;
@@ -6,6 +6,9 @@ pub struct Prim;
 impl Prim {
     pub fn new(row: usize, col: usize) -> Vec<Vec<char>> {
         let mut maz = vec![vec!['#'; col]; row];
+
+        // First, enforce walls on all edges
+        Self::enforce_edge_walls(&mut maz);
 
         // Select a random point on the edge as the start node
         let (sr, sc) = Self::random_edge_point(row, col);
@@ -16,7 +19,8 @@ impl Prim {
         let mut frontier = Vec::new();
         Self::add_neighbors(sr, sc, row, col, &mut frontier, &s);
 
-        // let mut last: Option<Point> = None;
+        // Keep track of potential end points during generation
+        let mut potential_ends = Vec::new();
 
         // Maze generation loop
         while !frontier.is_empty() {
@@ -24,29 +28,111 @@ impl Prim {
             let curr = frontier.remove(random_index);
 
             if let Some(opposite) = curr.opposite(row, col) {
-                if maz[curr.r][curr.c] == '#' && maz[opposite.r][opposite.c] == '#' {
-                    // Open paths between nodes
-                    maz[curr.r][curr.c] = '.';
-                    maz[opposite.r][opposite.c] = '.';
-                    // last = Some(opposite.clone());
+                let curr_is_edge = Self::is_edge_point(curr.r, curr.c, row, col);
+                let opposite_is_edge = Self::is_edge_point(opposite.r, opposite.c, row, col);
 
-                    // Add neighbors of the opposite point to the frontier
-                    Self::add_neighbors(opposite.r, opposite.c, row, col, &mut frontier, &opposite);
+                // Allow path creation if:
+                // 1. Neither point is on the edge, OR
+                // 2. The edge point could be a valid end point
+                if (!curr_is_edge && !opposite_is_edge) || 
+                   (curr_is_edge && Self::is_valid_end_location(&curr, sr, sc)) ||
+                   (opposite_is_edge && Self::is_valid_end_location(&opposite, sr, sc)) {
+                    
+                    if maz[curr.r][curr.c] == '#' && maz[opposite.r][opposite.c] == '#' {
+                        // Open paths between nodes
+                        maz[curr.r][curr.c] = '.';
+                        maz[opposite.r][opposite.c] = '.';
+
+                        // If we created a path to an edge, store it as a potential end point
+                        if curr_is_edge && Self::is_valid_end_location(&curr, sr, sc) {
+                            potential_ends.push((curr.r, curr.c));
+                        }
+                        if opposite_is_edge && Self::is_valid_end_location(&opposite, sr, sc) {
+                            potential_ends.push((opposite.r, opposite.c));
+                        }
+
+                        // Add neighbors of the opposite point to the frontier
+                        Self::add_neighbors(opposite.r, opposite.c, row, col, &mut frontier, &opposite);
+                    }
                 }
             }
         }
 
-        // Find a suitable end point on the edge
-        let (er, ec) = Self::find_end_point(&maz, row, col);
-        maz[er][ec] = 'E';
-
-        // Ensure all edges (except start and end) are walls
-        Self::enforce_edge_walls(&mut maz);
+        // Choose a random potential end point
+        if let Some(&mut (er, ec)) = potential_ends.choose_mut(&mut rand::thread_rng()) {
+            maz[er][ec] = 'E';
+        } else {
+            // If no potential ends were found during generation,
+            // find one using the flood fill method
+            let (er, ec) = Self::find_connected_end_point(&maz, sr, sc);
+            maz[er][ec] = 'E';
+        }
 
         maz
     }
 
-    // Helper to add neighbors to the frontier
+
+    // Helper function to check if a point is on the edge
+    fn is_edge_point(r: usize, c: usize, row: usize, col: usize) -> bool {
+        r == 0 || r == row - 1 || c == 0 || c == col - 1
+    }
+
+    // Helper function to check if a location could be a valid end point
+    fn is_valid_end_location(point: &Point, start_r: usize, start_c: usize) -> bool {
+        // Must not be the same as start point
+        point.r != start_r || point.c != start_c
+    }
+
+    fn find_connected_end_point(maz: &Vec<Vec<char>>, start_r: usize, start_c: usize) -> (usize, usize) {
+        let row = maz.len();
+        let col = maz[0].len();
+        
+        let mut visited = vec![vec![false; col]; row];
+        let mut reachable_edges = Vec::new();
+        
+        let mut stack = vec![(start_r, start_c)];
+        visited[start_r][start_c] = true;
+        
+        while let Some((r, c)) = stack.pop() {
+            if (r == 0 || r == row - 1 || c == 0 || c == col - 1) && 
+               (r != start_r || c != start_c) && 
+               (maz[r][c] == '.' || maz[r][c] == '#') {
+                reachable_edges.push((r, c));
+            }
+            
+            for (dr, dc) in [(-1, 0), (1, 0), (0, -1), (0, 1)] {
+                let new_r = (r as isize + dr) as usize;
+                let new_c = (c as isize + dc) as usize;
+                
+                if new_r < row && new_c < col && 
+                   !visited[new_r][new_c] && 
+                   maz[new_r][new_c] == '.' {
+                    stack.push((new_r, new_c));
+                    visited[new_r][new_c] = true;
+                }
+            }
+        }
+        
+        if !reachable_edges.is_empty() {
+            let idx = rand::thread_rng().gen_range(0..reachable_edges.len());
+            reachable_edges[idx]
+        } else {
+            // If we still can't find an end point, force create one
+            // by finding the closest reachable point to an edge
+            for r in 0..row {
+                for c in 0..col {
+                    if visited[r][c] && 
+                       (r == 0 || r == row-1 || c == 0 || c == col-1) && 
+                       (r != start_r || c != start_c) {
+                        return (r, c);
+                    }
+                }
+            }
+            panic!("No valid end point found!");
+        }
+    }
+
+    // Other helper functions remain the same...
     fn add_neighbors(
         r: usize,
         c: usize,
@@ -67,7 +153,6 @@ impl Prim {
         }
     }
 
-    // Helper to select a random edge point
     fn random_edge_point(row: usize, col: usize) -> (usize, usize) {
         let mut rng = rand::thread_rng();
         match rng.gen_range(0..4) {
@@ -78,30 +163,20 @@ impl Prim {
         }
     }
 
-    // Helper to find a suitable end point on the edge
-    fn find_end_point(maz: &Vec<Vec<char>>, row: usize, col: usize) -> (usize, usize) {
-        loop {
-            let (er, ec) = Self::random_edge_point(row, col);
-            if maz[er][ec] == '.' && (er != 0 || ec != 0) {  // Ensure it's not the start point
-                return (er, ec);
-            }
-        }
-    }
-
-    // Helper to enforce walls on all edges except start and end
     fn enforce_edge_walls(maz: &mut Vec<Vec<char>>) {
         let row = maz.len();
         let col = maz[0].len();
 
         for r in 0..row {
             for c in 0..col {
-                if (r == 0 || r == row - 1 || c == 0 || c == col - 1) && maz[r][c] != 'S' && maz[r][c] != 'E' {
+                if r == 0 || r == row - 1 || c == 0 || c == col - 1 {
                     maz[r][c] = '#';
                 }
             }
         }
     }
 }
+
 
 #[derive(Debug, Clone, Default)]
 struct Point {
